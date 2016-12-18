@@ -105,7 +105,7 @@ void handle_client(int command_socket, sockaddr_in client_addr) {
             if (bind(listen_socket, (sockaddr *) &listen_addr, sizeof(struct sockaddr)) != 0) {
                 std::cerr << std::strerror(errno) << std::endl;
             }
-            socklen_t my_data_addr_len;
+            socklen_t my_data_addr_len = sizeof(my_data_addr);
             if (getsockname(listen_socket, (sockaddr *) &my_data_addr, &my_data_addr_len) != 0)
             {
                 std::cerr << std::strerror(errno) << std::endl;
