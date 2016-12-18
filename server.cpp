@@ -16,7 +16,7 @@ int command_socket = 0, data_socket = 0;
 constexpr int MAX_BUFFER_SIZE = 4096 * 4096;
 char *buffer = new char[MAX_BUFFER_SIZE];
 struct sockaddr_in my_command_addr, my_data_addr;
-
+std::string localAddress;
 void handle_client(int command_client, sockaddr_in client_addr);
 
 int main(int argc, char **argv) {
@@ -26,8 +26,10 @@ int main(int argc, char **argv) {
         std::stringstream portStream(argv[2]);
         portStream >> listening_port;
         my_command_addr = construct_sockaddr(argv[1], listening_port);
+        localAddress = argv[1];
     } else if (argc == 2) {
         my_command_addr = construct_sockaddr(argv[1], 5021);
+        localAddress = argv[1];
     } else {
         my_command_addr = construct_sockaddr("", 5021);
     }
@@ -98,7 +100,7 @@ void handle_client(int command_socket, sockaddr_in client_addr) {
             send(command_socket, buffer, strlen(buffer), 0);
         } else if (command == "pasv") {
             int listen_socket = socket(AF_INET, SOCK_STREAM, 0);
-            my_data_addr = construct_sockaddr("", 5072);
+            my_data_addr = construct_sockaddr(localAddress, 0);
             if (bind(listen_socket, (sockaddr *) &my_data_addr, sizeof(my_data_addr)) < 0) {
                 std::cerr << std::strerror(errno) << std::endl;
             }
