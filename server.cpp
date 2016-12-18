@@ -101,16 +101,16 @@ void handle_client(int command_socket, sockaddr_in client_addr) {
             send(command_socket, buffer, strlen(buffer), 0);
         } else if (command == "pasv") {
             int listen_socket = socket(AF_INET, SOCK_STREAM, 0);
-            my_data_addr = construct_sockaddr(localAddress, 0);
-            if (bind(listen_socket, (sockaddr *) &my_data_addr, sizeof(my_data_addr)) < 0) {
-                std::cerr << std::strerror(errno) << std::endl;
-            }
-            if (listen(listen_socket, 20) < 0) {
+            sockaddr_in listen_addr = construct_sockaddr(str2ul(localAddress, '.'), 0);
+            if (bind(listen_socket, (sockaddr *) &listen_addr, sizeof(struct sockaddr)) != 0) {
                 std::cerr << std::strerror(errno) << std::endl;
             }
             socklen_t my_data_addr_len;
-            if (getsockname(listen_socket, (sockaddr *) &my_data_addr, &my_data_addr_len) < 0)
+            if (getsockname(listen_socket, (sockaddr *) &my_data_addr, &my_data_addr_len) != 0)
             {
+                std::cerr << std::strerror(errno) << std::endl;
+            }
+            if (listen(listen_socket, 20) != 0) {
                 std::cerr << std::strerror(errno) << std::endl;
             }
             sprintf(buffer, "%s\r\n", encode_address(my_data_addr.sin_addr.s_addr, my_data_addr.sin_port).c_str());
