@@ -16,23 +16,16 @@ int command_socket = 0, data_socket = 0;
 constexpr int MAX_BUFFER_SIZE = 4096 * 4096;
 char *buffer = new char[MAX_BUFFER_SIZE];
 struct sockaddr_in my_command_addr, my_data_addr;
-std::string localAddress;
 void handle_client(int command_client, sockaddr_in client_addr);
 
 int main(int argc, char **argv) {
     int listen_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (argc == 3) {
-        unsigned short listening_port = 5021;
+    unsigned short listening_port = 5021;
+    if (argc == 2) {
         std::stringstream portStream(argv[2]);
         portStream >> listening_port;
-        my_command_addr = construct_sockaddr("", listening_port);
-        localAddress = argv[1];
-    } else if (argc == 2) {
-        my_command_addr = construct_sockaddr("", 5021);
-        localAddress = argv[1];
-    } else {
-        my_command_addr = construct_sockaddr("", 5021);
     }
+    my_command_addr = construct_sockaddr("", listening_port);
     if (bind(listen_socket, (sockaddr *) &my_command_addr, sizeof(my_command_addr)) != 0) {
         std::cout << ul2str(ntohl(my_command_addr.sin_addr.s_addr)) << std::endl;
         log("Can't bind listen socket on specified address and port", std::cerr);

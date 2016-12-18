@@ -48,7 +48,7 @@ void server();
 
 int main(int argc, char **argv) {
     init();
-    server_command_addr = construct_sockaddr("", 5021);
+    server_command_addr = construct_sockaddr(str2ul(argv[1], '.'), 5021);
     int connect_response = connect(command_socket, (sockaddr *) &server_command_addr, sizeof(server_command_addr));
     if (connect_response != 0) {
         log(std::string("ERROR: Can't connect to Server") + std::strerror(errno), std::cerr);
