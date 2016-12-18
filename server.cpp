@@ -25,10 +25,10 @@ int main(int argc, char **argv) {
         unsigned short listening_port = 5021;
         std::stringstream portStream(argv[2]);
         portStream >> listening_port;
-        my_command_addr = construct_sockaddr(str2ul(argv[1], '.'), listening_port);
+        my_command_addr = construct_sockaddr("", listening_port);
         localAddress = argv[1];
     } else if (argc == 2) {
-        my_command_addr = construct_sockaddr(str2ul(argv[1], '.'), 5021);
+        my_command_addr = construct_sockaddr("", 5021);
         localAddress = argv[1];
     } else {
         my_command_addr = construct_sockaddr("", 5021);
