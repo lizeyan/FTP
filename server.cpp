@@ -128,7 +128,6 @@ void handle_client(int command_socket, sockaddr_in client_addr) {
                 int read_size = 0;
                 while ((read_size = fread(buffer, sizeof(char), MAX_BUFFER_SIZE, file)) != 0) {
                     send(data_socket, buffer, read_size, 0);
-                    log("To " + client_ip_address + ", " + std::string(buffer, read_size), std::cout);
                 }
                 fclose(file);
             } else {

@@ -46,6 +46,8 @@ void execCommand(std::string string, std::string content);
 
 void server();
 
+int nlst(const std::string &path);
+
 int main(int argc, char **argv) {
     init();
     server_command_addr = construct_sockaddr(str2ul(argv[1], '.'), 5021);
@@ -60,13 +62,17 @@ int main(int argc, char **argv) {
     std::regex complexCommandRegex("([a-zA-Z\\?]+)\\s*(\\S*|\\\".*\\\")\\s*(\\S*|\\\".*\\\")");
     std::smatch match, cmatch;
     while (std::cout << ">>" && std::getline(std::cin, line)) {
+        if (send(command_socket, buffer, 1, 0) == 0)
+        {
+            std::cout << "Session closed because server is offline." << std::endl;
+            return 0;
+        }
         std::string command;
         if (std::regex_match(line, match, commandRegex)) {
             command = lower(match[1]);
-        }
-        else if (std::regex_match(line, cmatch, complexCommandRegex)) {
+        } else if (std::regex_match(line, cmatch, complexCommandRegex)) {
             command = lower(cmatch[1]);
-        } else{
+        } else {
             std::cerr << "Invalid command. Type ? to show help." << std::endl;
             continue;
         }
@@ -79,34 +85,25 @@ int main(int argc, char **argv) {
             pwd();
         } else if (command == "dir") {
             list(content);
+        } else if (command == "dirname") {
+            nlst(content);
         } else if (command == "cd") {
             cwd(content);
         } else if (command == "?") {
             help();
         } else if (command == "quit") {
             quit();
-        }
-        else if (command == "rename")
-        {
+        } else if (command == "rename") {
             rn(cmatch[2], cmatch[3]);
-        }
-            else if (command == "rmd")
-        {
-            execCommand ("RMD", content);
-        }
-            else if (command == "mkdir")
-        {
-            execCommand ("MKD", content);
-        }
-        else if (command == "delete")
-        {
-            execCommand ("DELE", content);
-        }
-        else if (command == "server")
-        {
+        } else if (command == "rmd") {
+            execCommand("RMD", content);
+        } else if (command == "mkdir") {
+            execCommand("MKD", content);
+        } else if (command == "delete") {
+            execCommand("DELE", content);
+        } else if (command == "server") {
             server();
-        }
-        else {
+        } else {
             std::cerr << "Invalid command. Type ? to show help" << std::endl;
             std::cout << std::endl;
         }
@@ -182,8 +179,7 @@ int pasv()
     return ret;
 }
 
-int sendCommand(const std::string &command, const std::string &content = std::string(""))
-{
+int sendCommand(const std::string &command, const std::string &content = std::string("")) {
     int ret = 0;
     if ((ret = check_command_socket()) != 0)
         return ret;
@@ -195,18 +191,17 @@ int sendCommand(const std::string &command, const std::string &content = std::st
     return ret;
 }
 
-int waitForResponseCode()
-{
+int waitForResponseCode() {
     ssize_t recv_length;
     while ((recv_length = recv(command_socket, buffer, MAX_BUFFER_SIZE, 0)) == 0);
-    log("Response:" + std::string(buffer, recv_length), std::cout);
+//    log("Response:" + std::string(buffer, recv_length), std::cout);
     char rspns[RSPNS_SIZE];
     for (int i = 0; i < RSPNS_SIZE; ++i)
         rspns[i] = buffer[i];
     return std::atoi(rspns);
 }
-int wairForData()
-{
+
+int wairForData() {
     ssize_t recv_length;
     while ((recv_length = recv(data_socket, buffer, MAX_BUFFER_SIZE, 0)) == 0);
     if (recv_length < MAX_BUFFER_SIZE)
@@ -274,16 +269,15 @@ int stor(const std::string &filename) {
     sprintf(buffer, "STOR %s", filename.c_str());
     send(command_socket, buffer, strlen(buffer), 0);
     size_t fileLength;
-    int totalSize = 0;
-    while ((fileLength = fread(buffer, sizeof(char), MAX_BUFFER_SIZE, fin)) > 0) {
-        totalSize += fileLength;
-        send(data_socket, buffer, fileLength, 0);
-        std::cout << "fuck" << std::endl;
-    }
+    fseek(fin, 0L, SEEK_END); // seek to end of file
+    int totalSize = ftell(fin); // get current file pointer
+    fseek(fin, 0L, SEEK_SET);
     sprintf(buffer, "%d\r\n", totalSize);
-    log("Total Size:" + std::to_string(totalSize), std::cout);
     send(command_socket, buffer, strlen(buffer), 0);
-    log("Sending done", std::cout);
+    while ((fileLength = fread(buffer, sizeof(char), MAX_BUFFER_SIZE, fin)) > 0) {
+        send(data_socket, buffer, fileLength, 0);
+    }
+//    log("Sending done", std::cout);
     waitForResponseCode();
     return ret;
 }
@@ -352,8 +346,7 @@ void server() {
 void execCommand(std::string string, std::string content) {
     sendCommand(string, content);
     int response = waitForResponseCode();
-    switch (response)
-    {
+    switch (response) {
         case 250:
             break;
         default:
@@ -365,8 +358,7 @@ void execCommand(std::string string, std::string content) {
 void rn(std::string from, std::string to) {
     sendCommand("RNFR", from);
     int response = waitForResponseCode();
-    switch (response)
-    {
+    switch (response) {
         case 250:
             break;
         default:
@@ -376,8 +368,7 @@ void rn(std::string from, std::string to) {
     }
     sendCommand("RNTO", to);
     response = waitForResponseCode();
-    switch (response)
-    {
+    switch (response) {
         case 250:
             break;
         default:
