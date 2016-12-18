@@ -122,23 +122,23 @@ void handle_client(int command_socket, sockaddr_in client_addr) {
             std::string filename = exec("cd " + workingDirectory + " \n realpath " + content);
             log("filename:" + filename, std::cout);
             FILE *file = fopen(filename.c_str(), "r");
-            fseek(file, 0, SEEK_END); // seek to end of file
-            int totalSize = ftell(file); // get current file pointer
-            fseek(file, 0, SEEK_SET);
             if (file != NULL) {
-                int read_size = 0;
+                fseek(file, 0, SEEK_END); // seek to end of file
+                int totalSize = ftell(file); // get current file pointer
+                fseek(file, 0, SEEK_SET);
                 sprintf(buffer, "226%d\r\n", totalSize);
                 send(command_socket, buffer, strlen(buffer), 0);
                 log("Total Size:" + std::to_string(totalSize), std::cout);
+                int read_size = 0;
                 while ((read_size = fread(buffer, sizeof(char), MAX_BUFFER_SIZE, file)) != 0) {
                     send(data_socket, buffer, read_size, 0);
                     log("To " + client_ip_address + ", " + std::string(buffer, read_size), std::cout);
                 }
+                fclose(file);
             } else {
-                sprintf(buffer, "500\r\n");
+                sprintf(buffer, "551\r\n");
                 send(command_socket, buffer, strlen(buffer), 0);
             }
-            fclose(file);
         } else if (command == "stor" || command == "appe") {
             int totalSize = 0;
             commandStream >> totalSize;
@@ -156,12 +156,9 @@ void handle_client(int command_socket, sockaddr_in client_addr) {
                 file = fopen(filename.c_str(), "a+");
             if (file != NULL) {
                 int recv_length = 0;
-                while ((recv_length = recv(data_socket, buffer, MAX_BUFFER_SIZE, 0)) > 0) {
+                while (totalSize > 0 && (recv_length = recv(data_socket, buffer, MAX_BUFFER_SIZE, 0)) > 0) {
                     fwrite(buffer, sizeof(char), recv_length, file);
-                    log("Received File: " + client_ip_address + ", " + std::string(buffer, recv_length), std::cout);
-//                    log("recv length:" + std::to_string(recv_length) + " last:" + std::to_string(int(buffer[MAX_BUFFER_SIZE - 1])), std::cout);
-//                    if (recv_length < MAX_BUFFER_SIZE || (recv_length == MAX_BUFFER_SIZE && buffer[MAX_BUFFER_SIZE - 1] == '\n'))
-//                        break;
+                    totalSize -= recv_length;
                 }
                 fclose(file);
                 sprintf(buffer, "250\r\n");

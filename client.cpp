@@ -235,7 +235,6 @@ int retr(const std::string &filename)
             FILE *fout = fopen(pureFileName.c_str(), "w+");
             while (totalSize > 0 && (recv_length = recv(data_socket, buffer, MAX_BUFFER_SIZE, 0)) > 0) {
                 fwrite(buffer, sizeof(char), recv_length, fout);
-                std::cout << std::string(buffer, recv_length) << std::endl;
                 totalSize -= recv_length;
             }
             fclose(fout);
