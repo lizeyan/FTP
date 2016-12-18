@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.6)
+add_compile_options("-Wall")
+add_executable("Client" client.cpp)
+add_executable("Server" server.cpp)
+target_link_libraries("Server" "pthread")
