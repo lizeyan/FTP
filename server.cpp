@@ -101,7 +101,7 @@ void handle_client(int command_socket, sockaddr_in client_addr) {
             send(command_socket, buffer, strlen(buffer), 0);
         } else if (command == "pasv") {
             int listen_socket = socket(AF_INET, SOCK_STREAM, 0);
-            sockaddr_in listen_addr = construct_sockaddr(str2ul(localAddress, '.'), 0);
+            sockaddr_in listen_addr = construct_sockaddr("", 0);
             if (bind(listen_socket, (sockaddr *) &listen_addr, sizeof(struct sockaddr)) != 0) {
                 std::cerr << std::strerror(errno) << std::endl;
             }
