@@ -25,15 +25,16 @@ int main(int argc, char **argv) {
         unsigned short listening_port = 5021;
         std::stringstream portStream(argv[2]);
         portStream >> listening_port;
-        my_command_addr = construct_sockaddr(argv[1], listening_port);
+        my_command_addr = construct_sockaddr(str2ul(argv[1], '.'), listening_port);
         localAddress = argv[1];
     } else if (argc == 2) {
-        my_command_addr = construct_sockaddr(argv[1], 5021);
+        my_command_addr = construct_sockaddr(str2ul(argv[1], '.'), 5021);
         localAddress = argv[1];
     } else {
         my_command_addr = construct_sockaddr("", 5021);
     }
     if (bind(listen_socket, (sockaddr *) &my_command_addr, sizeof(my_command_addr)) != 0) {
+        std::cout << ul2str(ntohl(my_command_addr.sin_addr.s_addr)) << std::endl;
         log("Can't bind listen socket on specified address and port", std::cerr);
     }
     if (listen(listen_socket, 20) != 0) {

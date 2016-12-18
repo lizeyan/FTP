@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.0)
 add_compile_options("-Wall")
 add_executable("Client" client.cpp)
 add_executable("Server" server.cpp)

@@ -41,9 +41,9 @@ std::string ul2str(unsigned long ip) {
     return ret;
 }
 
-unsigned long str2ul(const std::string &str) {
+unsigned long str2ul(const std::string &str, char sep = ',') {
     unsigned long h1 = 0, h2 = 0, h3 = 0, h4 = 0;
-    sscanf(str.c_str(), "%lu,%lu,%lu,%lu", &h4, &h3, &h2, &h1);
+    sscanf(str.c_str(), (std::string("%lu") + sep + "%lu" + sep + "%lu" + sep + "%lu").c_str(), &h4, &h3, &h2, &h1);
     return ((h4 & 0xFF) << 24) | ((h3 & 0xFF) << 16) | ((h2 & 0xFF) << 8) | (h1 & 0xFF);
 }
 
