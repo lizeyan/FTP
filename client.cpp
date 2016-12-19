@@ -336,6 +336,10 @@ void help() {
     std::cout << "\tpwd" << std::endl;
     std::cout << "\tdir [path]" << std::endl;
     std::cout << "\tcd path" << std::endl;
+    std::cout << "\tmkd path-to-directory" << std::endl;
+    std::cout << "\trmd path-todirectory" << std::endl;
+    std::cout << "\tdelete path-to-file" << std::endl;
+    std::cout << "\trename old-path new-path" << std::endl;
     std::cout << "\tquit" << std::endl;
 }
 
