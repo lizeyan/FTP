@@ -36,7 +36,7 @@ int init()
 //return error code
 ;
 
-int pasv()
+int pasv(unsigned long ip)
 //send PASV command and wait for response
 ;
 
@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
         log(std::string("ERROR: Can't connect to Server") + std::strerror(errno), std::cerr);
         return 1;
     }
-    pasv();
+    pasv(str2ul(argv[1], '.'));
     std::string line;
     std::regex commandRegex("([a-zA-Z\\?]+)\\s*(\\S*|\\\".*\\\")");
     std::regex complexCommandRegex("([a-zA-Z\\?]+)\\s*(\\S*|\\\".*\\\")\\s*(\\S*|\\\".*\\\")");
@@ -149,7 +149,7 @@ int port(unsigned long addr, unsigned short port)
     return ret;
 }
 
-int pasv()
+int pasv(unsigned long server_ip)
 //send PASV command and wait for response
 {
     int ret = 0;
@@ -169,7 +169,7 @@ int pasv()
     }
     struct sockaddr_in *sockaddrIn = (&server_data_addr);
     sockaddrIn->sin_family = AF_INET;
-    sockaddrIn->sin_addr.s_addr = addr;
+    sockaddrIn->sin_addr.s_addr = htonl(server_ip);
     sockaddrIn->sin_port = port;
     log("PASV addr:" + ul2str(ntohl(addr)) + ", port:" + std::to_string(ntohs(port)), std::cout);
     if (connect(data_socket, (struct sockaddr *) (sockaddrIn), sizeof(server_data_addr)) != 0) {
