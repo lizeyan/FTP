@@ -120,9 +120,9 @@ void handle_client(int command_socket, sockaddr_in client_addr) {
             FILE *file = fopen(filename.c_str(), "r");
             if (file != NULL) {
                 fseek(file, 0, SEEK_END); // seek to end of file
-                int totalSize = ftell(file); // get current file pointer
+                long long totalSize = ftell(file); // get current file pointer
                 fseek(file, 0, SEEK_SET);
-                sprintf(buffer, "226%d\r\n", totalSize);
+                sprintf(buffer, "226%lld\r\n", totalSize);
                 send(command_socket, buffer, strlen(buffer), 0);
                 log("Total Size:" + std::to_string(totalSize), std::cout);
                 int read_size = 0;
@@ -135,12 +135,12 @@ void handle_client(int command_socket, sockaddr_in client_addr) {
                 send(command_socket, buffer, strlen(buffer), 0);
             }
         } else if (command == "stor" || command == "appe") {
-            int totalSize = 0;
+            long long totalSize = 0;
             commandStream >> totalSize;
             if (totalSize <= 0)
             {
                 recv(command_socket, buffer, MAX_BUFFER_SIZE, 0);
-                totalSize = atoi(buffer);
+                totalSize = atoll(buffer);
             }
             log("Total Size:" + std::to_string(totalSize), std::cout);
             std::string filename = exec("cd " + workingDirectory + " \n realpath " + content);
@@ -254,7 +254,11 @@ void handle_client(int command_socket, sockaddr_in client_addr) {
             sprintf(buffer, "250\r\n");
             send(command_socket, buffer, strlen(buffer), 0);
             log("To " + client_ip_address + ", " + std::string(buffer), std::cout);
-        } else {
+        }
+        else if (command == "test"){
+            //ignore
+        }
+        else {
             //Syntax Error
             sprintf(buffer, "500\r\n");
             send(command_socket, buffer, strlen(buffer), 0);

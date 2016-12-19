@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
     std::regex complexCommandRegex("([a-zA-Z\\?]+)\\s*(\\S*|\\\".*\\\")\\s*(\\S*|\\\".*\\\")");
     std::smatch match, cmatch;
     while (std::cout << ">>" && std::getline(std::cin, line)) {
-        if (send(command_socket, buffer, 1, 0) == 0)
+        if (send(command_socket, "TEST\r\n", 6, 0) == 0)
         {
             std::cout << "Session closed because server is offline." << std::endl;
             return 0;
@@ -222,7 +222,7 @@ int retr(const std::string &filename)
     int response = 0;
     sendCommand("RETR", filename);
     response = waitForResponseCode();
-    int totalSize = atoi(buffer + RSPNS_SIZE);
+    long long totalSize = atoll(buffer + RSPNS_SIZE);
     switch (response) {
         case 226: //OK, then save it
         {
@@ -270,9 +270,9 @@ int stor(const std::string &filename) {
     send(command_socket, buffer, strlen(buffer), 0);
     size_t fileLength;
     fseek(fin, 0L, SEEK_END); // seek to end of file
-    int totalSize = ftell(fin); // get current file pointer
+    long long totalSize = ftell(fin); // get current file pointer
     fseek(fin, 0L, SEEK_SET);
-    sprintf(buffer, "%d\r\n", totalSize);
+    sprintf(buffer, "%lld\r\n", totalSize);
     send(command_socket, buffer, strlen(buffer), 0);
     while ((fileLength = fread(buffer, sizeof(char), MAX_BUFFER_SIZE, fin)) > 0) {
         send(data_socket, buffer, fileLength, 0);
