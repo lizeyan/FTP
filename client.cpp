@@ -62,11 +62,6 @@ int main(int argc, char **argv) {
     std::regex complexCommandRegex("([a-zA-Z\\?]+)\\s*(\\S*|\\\".*\\\")\\s*(\\S*|\\\".*\\\")");
     std::smatch match, cmatch;
     while (std::cout << ">>" && std::getline(std::cin, line)) {
-        if (send(command_socket, "TEST\r\n", 6, 0) == 0)
-        {
-            std::cout << "Session closed because server is offline." << std::endl;
-            return 0;
-        }
         std::string command;
         if (std::regex_match(line, match, commandRegex)) {
             command = lower(match[1]);
@@ -143,7 +138,8 @@ int port(unsigned long addr, unsigned short port)
     sprintf(buffer, "PORT %s\r\n", encode_address(addr, port).c_str());
     if ((ret = check_command_socket()) != 0)
         return ret;
-    send(command_socket, buffer, strlen(buffer), 0);
+    if (send(command_socket, buffer, strlen(buffer), 0) == 0)
+        return -1;
     listen(listen_socket, 20);
     data_socket = accept(listen_socket, (sockaddr *) &server_data_addr, NULL);
     return ret;
@@ -156,8 +152,12 @@ int pasv(unsigned long server_ip)
     if ((ret = check_command_socket()) != 0)
         return ret;
     sprintf(buffer, "PASV\r\n");
-    send(command_socket, buffer, strlen(buffer), 0);
-    while (recv(command_socket, buffer, MAX_BUFFER_SIZE, 0) <= 0);
+    if (send(command_socket, buffer, strlen(buffer), 0) == 0)
+        return -1;
+    if (recv(command_socket, buffer, MAX_BUFFER_SIZE, 0) <= 0)
+    {
+        return -1;
+    }
     unsigned long addr;
     unsigned short port;
     decode_address(buffer, addr, port);
@@ -187,13 +187,18 @@ int sendCommand(const std::string &command, const std::string &content = std::st
         sprintf(buffer, "%s\r\n", command.c_str());
     else
         sprintf(buffer, "%s %s\r\n", command.c_str(), content.c_str());
-    send(command_socket, buffer, strlen(buffer), 0);
+    if (send(command_socket, buffer, strlen(buffer), 0) == 0)
+        return -1;
     return ret;
 }
 
 int waitForResponseCode() {
     ssize_t recv_length;
-    while ((recv_length = recv(command_socket, buffer, MAX_BUFFER_SIZE, 0)) == 0);
+    if ((recv_length = recv(command_socket, buffer, MAX_BUFFER_SIZE, 0)) == 0)
+    {
+        log("Session Closed unexpectedly", std::cerr);
+        exit(1);
+    }
 //    log("Response:" + std::string(buffer, recv_length), std::cout);
     char rspns[RSPNS_SIZE];
     for (int i = 0; i < RSPNS_SIZE; ++i)
@@ -267,13 +272,15 @@ int stor(const std::string &filename) {
         return -1;
     }
     sprintf(buffer, "STOR %s", filename.c_str());
-    send(command_socket, buffer, strlen(buffer), 0);
+    if (send(command_socket, buffer, strlen(buffer), 0) == -1)
+        return 0;
     size_t fileLength;
     fseek(fin, 0L, SEEK_END); // seek to end of file
     long long totalSize = ftell(fin); // get current file pointer
     fseek(fin, 0L, SEEK_SET);
     sprintf(buffer, "%lld\r\n", totalSize);
-    send(command_socket, buffer, strlen(buffer), 0);
+    if (send(command_socket, buffer, strlen(buffer), 0) == 0)
+        return 0;
     while ((fileLength = fread(buffer, sizeof(char), MAX_BUFFER_SIZE, fin)) > 0) {
         send(data_socket, buffer, fileLength, 0);
     }
